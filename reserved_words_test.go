@@ -11,34 +11,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//+build reserved_words_test
-
-// This file ensures that the set of reserved keywords is the same as that of
-// MySQL. To run:
-//
-//  1. Set up a MySQL server listening at 127.0.0.1:3306 using root and no password
-//  2. Run this test with:
-//
-//		go test -tags reserved_words_test -check.f TestReservedWords
 package parser
 
 import (
 	dbsql "database/sql"
-
-	// needed to connect to MySQL
-	_ "github.com/go-sql-driver/mysql"
-	. "github.com/pingcap/check"
-
-	"github.com/kyleconroy/sqlparse/ast"
+	"io/ioutil"
+	"strings"
+	"testing"
 )
 
-func (s *testConsistentSuite) TestCompareReservedWordsWithMySQL(c *C) {
-	p := New()
-	db, err := dbsql.Open("mysql", "root@tcp(127.0.0.1:3306)/")
-	c.Assert(err, IsNil)
-	defer db.Close()
+// Add a comment about how this
+func CheckCompareReservedWordsWithMySQL(t *testing.T, db *dbsql.DB) {
+	data, err := ioutil.ReadFile("parser.y")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	for _, kw := range s.reservedKeywords {
+	content := string(data)
+	reservedKeywords := extractKeywords(content, "ReservedKeyword")
+	unreservedKeywords := extractKeywords(content, "UnReservedKeyword")
+	notKeywordTokens := extractKeywords(content, "NotKeywordToken")
+	tidbKeywords := extractKeywords(content, "TiDBKeyword")
+
+	p := New()
+	for _, kw := range reservedKeywords {
 		switch kw {
 		case "CURRENT_ROLE":
 			// special case: we do reserve CURRENT_ROLE but MySQL didn't,
@@ -47,20 +43,24 @@ func (s *testConsistentSuite) TestCompareReservedWordsWithMySQL(c *C) {
 		}
 
 		query := "do (select 1 as " + kw + ")"
-		errRegexp := ".*" + kw + ".*"
 
 		var err error
 
 		if _, ok := windowFuncTokenMap[kw]; !ok {
 			// for some reason the query does parse even then the keyword is reserved in TiDB.
 			_, _, err = p.Parse(query, "", "")
-			c.Assert(err, ErrorMatches, errRegexp)
+			if !strings.Contains(err.Error(), kw) {
+				t.Errorf("error should contain '%s': %s", kw, err)
+			}
 		}
+
 		_, err = db.Exec(query)
-		c.Assert(err, ErrorMatches, errRegexp, Commentf("MySQL suggests that '%s' should *not* be reserved!", kw))
+		if !strings.Contains(err.Error(), kw) {
+			t.Errorf("MySQL suggests that '%s' should *not* be reserved!", kw)
+		}
 	}
 
-	for _, kws := range [][]string{s.unreservedKeywords, s.notKeywordTokens, s.tidbKeywords} {
+	for _, kws := range [][]string{unreservedKeywords, notKeywordTokens, tidbKeywords} {
 		for _, kw := range kws {
 			switch kw {
 			case "FUNCTION", // reserved in 8.0.1
@@ -71,12 +71,20 @@ func (s *testConsistentSuite) TestCompareReservedWordsWithMySQL(c *C) {
 			query := "do (select 1 as " + kw + ")"
 
 			stmts, _, err := p.Parse(query, "", "")
-			c.Assert(err, IsNil)
-			c.Assert(stmts, HasLen, 1)
-			c.Assert(stmts[0], FitsTypeOf, &ast.DoStmt{})
+			if err != nil {
+				t.Errorf("%s: %s", kw, err)
+				continue
+			}
+			if len(stmts) != 1 {
+				t.Errorf("%s should have one statement; has %d", kw, len(stmts))
+				continue
+			}
 
+			// c.Assert(stmts[0], FitsTypeOf, &ast.DoStmt{})
 			_, err = db.Exec(query)
-			c.Assert(err, IsNil, Commentf("MySQL suggests that '%s' should be reserved!", kw))
+			if err != nil {
+				t.Errorf("MySQL suggests that '%s' should be reserved!: %s", kw, err)
+			}
 		}
 	}
 }
