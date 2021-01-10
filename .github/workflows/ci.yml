@@ -22,3 +22,8 @@ jobs:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
         CGO_ENABLED: '0'
+    - run: go1.16beta1 test -p 1 -race -covermode=atomic -coverprofile=coverage.txt -coverpkg=./... ./...
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        CGO_ENABLED: '0'
