@@ -18,14 +18,14 @@ import (
 	"testing"
 
 	. "github.com/pingcap/check"
-	"github.com/pingcap/parser"
-	"github.com/pingcap/parser/ast"
-	"github.com/pingcap/parser/charset"
-	"github.com/pingcap/parser/mysql"
-	. "github.com/pingcap/parser/types"
+	"github.com/kyleconroy/sqlparse"
+	"github.com/kyleconroy/sqlparse/ast"
+	"github.com/kyleconroy/sqlparse/charset"
+	"github.com/kyleconroy/sqlparse/mysql"
+	. "github.com/kyleconroy/sqlparse/types"
 
 	// import parser_driver
-	_ "github.com/pingcap/parser/test_driver"
+	_ "github.com/kyleconroy/sqlparse/test_driver"
 )
 
 func TestT(t *testing.T) {

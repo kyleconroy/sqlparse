@@ -22,15 +22,15 @@ import (
 
 	. "github.com/pingcap/check"
 	"github.com/pingcap/errors"
-	"github.com/pingcap/parser"
-	"github.com/pingcap/parser/ast"
-	"github.com/pingcap/parser/charset"
-	. "github.com/pingcap/parser/format"
-	"github.com/pingcap/parser/model"
-	"github.com/pingcap/parser/mysql"
-	"github.com/pingcap/parser/opcode"
-	"github.com/pingcap/parser/terror"
-	"github.com/pingcap/parser/test_driver"
+	"github.com/kyleconroy/sqlparse"
+	"github.com/kyleconroy/sqlparse/ast"
+	"github.com/kyleconroy/sqlparse/charset"
+	. "github.com/kyleconroy/sqlparse/format"
+	"github.com/kyleconroy/sqlparse/model"
+	"github.com/kyleconroy/sqlparse/mysql"
+	"github.com/kyleconroy/sqlparse/opcode"
+	"github.com/kyleconroy/sqlparse/terror"
+	"github.com/kyleconroy/sqlparse/test_driver"
 )
 
 func TestT(t *testing.T) {
@@ -854,7 +854,7 @@ func (s *testParserSuite) TestDMLStmt(c *C) {
 		//https://github.com/pingcap/tidb/issues/14297
 		{"select 1 where 1=1", true, "SELECT 1 FROM DUAL WHERE 1=1"},
 
-		// for https://github.com/pingcap/parser/issues/963
+		// for https://github.com/kyleconroy/sqlparse/issues/963
 		{"select min(b) b from (select min(t.b) b from t where t.a = '');", true, "SELECT MIN(`b`) AS `b` FROM (SELECT MIN(`t`.`b`) AS `b` FROM (`t`) WHERE `t`.`a`=_UTF8MB4'')"},
 		{"select min(b) b from (select min(t.b) b from t where t.a = '') as t1;", true, "SELECT MIN(`b`) AS `b` FROM (SELECT MIN(`t`.`b`) AS `b` FROM (`t`) WHERE `t`.`a`=_UTF8MB4'') AS `t1`"},
 
@@ -5269,7 +5269,7 @@ func (wfc *windowFrameBoundChecker) Leave(inNode ast.Node) (node ast.Node, ok bo
 }
 
 // For issue #51
-// See https://github.com/pingcap/parser/pull/51 for details
+// See https://github.com/kyleconroy/sqlparse/pull/51 for details
 func (s *testParserSuite) TestVisitFrameBound(c *C) {
 	parser := parser.New()
 	parser.EnableWindowFunc(true)
@@ -5314,7 +5314,7 @@ func (s *testParserSuite) TestFieldText(c *C) {
 	}
 }
 
-// See https://github.com/pingcap/parser/issue/94
+// See https://github.com/kyleconroy/sqlparse/issue/94
 func (s *testParserSuite) TestQuotedSystemVariables(c *C) {
 	parser := parser.New()
 
@@ -5375,7 +5375,7 @@ func (s *testParserSuite) TestQuotedSystemVariables(c *C) {
 	}
 }
 
-// See https://github.com/pingcap/parser/issue/95
+// See https://github.com/kyleconroy/sqlparse/issue/95
 func (s *testParserSuite) TestQuotedVariableColumnName(c *C) {
 	parser := parser.New()
 

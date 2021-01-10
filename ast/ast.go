@@ -18,9 +18,9 @@ package ast
 import (
 	"io"
 
-	"github.com/pingcap/parser/format"
-	"github.com/pingcap/parser/model"
-	"github.com/pingcap/parser/types"
+	"github.com/kyleconroy/sqlparse/format"
+	"github.com/kyleconroy/sqlparse/model"
+	"github.com/kyleconroy/sqlparse/types"
 )
 
 // Node is the basic element of the AST.

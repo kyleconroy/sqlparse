@@ -15,12 +15,12 @@ package ast
 
 import (
 	"github.com/pingcap/errors"
-	"github.com/pingcap/parser/auth"
-	"github.com/pingcap/parser/format"
-	"github.com/pingcap/parser/model"
-	"github.com/pingcap/parser/mysql"
-	"github.com/pingcap/parser/terror"
-	"github.com/pingcap/parser/types"
+	"github.com/kyleconroy/sqlparse/auth"
+	"github.com/kyleconroy/sqlparse/format"
+	"github.com/kyleconroy/sqlparse/model"
+	"github.com/kyleconroy/sqlparse/mysql"
+	"github.com/kyleconroy/sqlparse/terror"
+	"github.com/kyleconroy/sqlparse/types"
 )
 
 var (
