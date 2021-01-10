@@ -42,6 +42,7 @@ func TestKeywordConsistent(t *testing.T) {
 	}
 
 	content := string(data)
+
 	reservedKeywords := extractKeywords(content, "ReservedKeyword")
 	unreservedKeywords := extractKeywords(content, "UnReservedKeyword")
 	notKeywordTokens := extractKeywords(content, "NotKeywordToken")
@@ -66,6 +67,19 @@ func TestKeywordConsistent(t *testing.T) {
 	if diff := cmp.Diff(tidbKeywords, tidbKeywordsCollectionDef); diff != "" {
 		t.Errorf("TiDB keywords: %s", diff)
 	}
+}
+
+func extractMiddle(str, startMarker, endMarker string) string {
+	startIdx := strings.Index(str, startMarker)
+	if startIdx == -1 {
+		return ""
+	}
+	str = str[startIdx+len(startMarker):]
+	endIdx := strings.Index(str, endMarker)
+	if endIdx == -1 {
+		return ""
+	}
+	return str[:endIdx]
 }
 
 func extractLines(str, startMarker, endMarker string) []string {
