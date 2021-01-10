@@ -1,6 +1,18 @@
 name: go
 on: [push]
 jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ 'ubuntu-20-04', 'windows-latest', 'macos-latest' ]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.15'
+    - run: sh test.sh
+
   build:
     runs-on: 'ubuntu-20.04'
     strategy:
@@ -18,11 +30,6 @@ jobs:
     - run: go get golang.org/dl/go1.16beta1
     - run: go1.16beta1 download
     - run: go1.16beta1 build ./...
-      env:
-        GOOS: ${{ matrix.goos }}
-        GOARCH: ${{ matrix.goarch }}
-        CGO_ENABLED: '0'
-    - run: go1.16beta1 test -p 1 -race -covermode=atomic -coverprofile=coverage.txt -coverpkg=./... ./...
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
