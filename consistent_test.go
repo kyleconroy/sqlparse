@@ -14,6 +14,8 @@
 package parser
 
 import (
+	"bufio"
+	"fmt"
 	"io/ioutil"
 	"sort"
 	"strings"
@@ -40,50 +42,57 @@ func TestKeywordConsistent(t *testing.T) {
 	}
 
 	content := string(data)
-
-	reservedKeywordStartMarker := "\t/* The following tokens belong to ReservedKeyword. Notice: make sure these tokens are contained in ReservedKeyword. */"
-	unreservedKeywordStartMarker := "\t/* The following tokens belong to UnReservedKeyword. Notice: make sure these tokens are contained in UnReservedKeyword. */"
-	notKeywordTokenStartMarker := "\t/* The following tokens belong to NotKeywordToken. Notice: make sure these tokens are contained in NotKeywordToken. */"
-	tidbKeywordStartMarker := "\t/* The following tokens belong to TiDBKeyword. Notice: make sure these tokens are contained in TiDBKeyword. */"
-	identTokenEndMarker := "%token\t<item>"
-
-	reservedKeywords := extractKeywords(content, reservedKeywordStartMarker, unreservedKeywordStartMarker)
-	unreservedKeywords := extractKeywords(content, unreservedKeywordStartMarker, notKeywordTokenStartMarker)
-	notKeywordTokens := extractKeywords(content, notKeywordTokenStartMarker, tidbKeywordStartMarker)
-	tidbKeywords := extractKeywords(content, tidbKeywordStartMarker, identTokenEndMarker)
+	reservedKeywords := extractKeywords(content, "ReservedKeyword")
+	unreservedKeywords := extractKeywords(content, "UnReservedKeyword")
+	notKeywordTokens := extractKeywords(content, "NotKeywordToken")
+	tidbKeywords := extractKeywords(content, "TiDBKeyword")
 
 	keywordCount := len(reservedKeywords) + len(unreservedKeywords) + len(notKeywordTokens) + len(tidbKeywords)
 	if diff := cmp.Diff(len(tokenMap)-len(aliases), keywordCount-len(windowFuncTokenMap)); diff != "" {
 		t.Errorf("length tokenMap does not match keyword count: %s", diff)
 	}
 
-	unreservedCollectionDef := extractKeywordsFromCollectionDef(content, "\nUnReservedKeyword:")
+	unreservedCollectionDef := extractKeywordsFromCollectionDef(content, "UnReservedKeyword:")
 	if diff := cmp.Diff(unreservedKeywords, unreservedCollectionDef); diff != "" {
 		t.Errorf("unreserved keywords: %s", diff)
 	}
 
-	notKeywordTokensCollectionDef := extractKeywordsFromCollectionDef(content, "\nNotKeywordToken:")
+	notKeywordTokensCollectionDef := extractKeywordsFromCollectionDef(content, "NotKeywordToken:")
 	if diff := cmp.Diff(notKeywordTokens, notKeywordTokensCollectionDef); diff != "" {
 		t.Errorf("not keyword tokens: %s", diff)
 	}
 
-	tidbKeywordsCollectionDef := extractKeywordsFromCollectionDef(content, "\nTiDBKeyword:")
+	tidbKeywordsCollectionDef := extractKeywordsFromCollectionDef(content, "TiDBKeyword:")
 	if diff := cmp.Diff(tidbKeywords, tidbKeywordsCollectionDef); diff != "" {
 		t.Errorf("TiDB keywords: %s", diff)
 	}
 }
 
-func extractMiddle(str, startMarker, endMarker string) string {
-	startIdx := strings.Index(str, startMarker)
-	if startIdx == -1 {
-		return ""
+func extractLines(str, startMarker, endMarker string) []string {
+	var started, stopped bool
+	var lines []string
+	scanner := bufio.NewScanner(strings.NewReader(str))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == startMarker {
+			started = true
+			continue
+		}
+		if started && line == endMarker {
+			stopped = true
+			continue
+		}
+		if stopped {
+			continue
+		}
+		if started {
+			lines = append(lines, line)
+		}
 	}
-	str = str[startIdx+len(startMarker):]
-	endIdx := strings.Index(str, endMarker)
-	if endIdx == -1 {
-		return ""
+	if err := scanner.Err(); err != nil {
+		panic(err)
 	}
-	return str[:endIdx]
+	return lines
 }
 
 func extractQuotedWords(strs []string) []string {
@@ -99,14 +108,13 @@ func extractQuotedWords(strs []string) []string {
 	return words
 }
 
-func extractKeywords(content, startMarker, endMarker string) []string {
-	keywordSection := extractMiddle(content, startMarker, endMarker)
-	lines := strings.Split(keywordSection, "\n")
+func extractKeywords(content, keyword string) []string {
+	start := fmt.Sprintf("/* The following tokens belong to %s. Notice: make sure these tokens are contained in %s. */", keyword, keyword)
+	lines := extractLines(content, start, "")
 	return extractQuotedWords(lines)
 }
 
 func extractKeywordsFromCollectionDef(content, startMarker string) []string {
-	keywordSection := extractMiddle(content, startMarker, "\n\n")
-	words := strings.Split(keywordSection, "|")
-	return extractQuotedWords(words)
+	lines := extractLines(content, startMarker, "")
+	return extractQuotedWords(lines)
 }
