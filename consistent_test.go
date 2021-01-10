@@ -15,34 +15,31 @@ package parser
 
 import (
 	"io/ioutil"
-	"os"
-	"path"
-	"runtime"
 	"sort"
 	"strings"
+	"testing"
 
-	. "github.com/pingcap/check"
+	"github.com/google/go-cmp/cmp"
 )
 
-var _ = Suite(&testConsistentSuite{})
-
-type testConsistentSuite struct {
-	content string
-
-	reservedKeywords   []string
-	unreservedKeywords []string
-	notKeywordTokens   []string
-	tidbKeywords       []string
+func TestAliases(t *testing.T) {
+	for k, v := range aliases {
+		if cmp.Equal(k, v) {
+			t.Errorf("exptected k: %s to not equal v: %s", k, v)
+		}
+		if diff := cmp.Diff(tokenMap[k], tokenMap[v]); diff != "" {
+			t.Errorf("exptected tokens to match: %s", diff)
+		}
+	}
 }
 
-func (s *testConsistentSuite) SetUpSuite(c *C) {
-	_, filename, _, _ := runtime.Caller(0)
-	parserFilename := path.Join(path.Dir(filename), "parser.y")
-	parserFile, err := os.Open(parserFilename)
-	c.Assert(err, IsNil)
-	data, err := ioutil.ReadAll(parserFile)
-	c.Assert(err, IsNil)
-	s.content = string(data)
+func TestKeywordConsistent(t *testing.T) {
+	data, err := ioutil.ReadFile("parser.y")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	content := string(data)
 
 	reservedKeywordStartMarker := "\t/* The following tokens belong to ReservedKeyword. Notice: make sure these tokens are contained in ReservedKeyword. */"
 	unreservedKeywordStartMarker := "\t/* The following tokens belong to UnReservedKeyword. Notice: make sure these tokens are contained in UnReservedKeyword. */"
@@ -50,28 +47,30 @@ func (s *testConsistentSuite) SetUpSuite(c *C) {
 	tidbKeywordStartMarker := "\t/* The following tokens belong to TiDBKeyword. Notice: make sure these tokens are contained in TiDBKeyword. */"
 	identTokenEndMarker := "%token\t<item>"
 
-	s.reservedKeywords = extractKeywords(s.content, reservedKeywordStartMarker, unreservedKeywordStartMarker)
-	s.unreservedKeywords = extractKeywords(s.content, unreservedKeywordStartMarker, notKeywordTokenStartMarker)
-	s.notKeywordTokens = extractKeywords(s.content, notKeywordTokenStartMarker, tidbKeywordStartMarker)
-	s.tidbKeywords = extractKeywords(s.content, tidbKeywordStartMarker, identTokenEndMarker)
-}
+	reservedKeywords := extractKeywords(content, reservedKeywordStartMarker, unreservedKeywordStartMarker)
+	unreservedKeywords := extractKeywords(content, unreservedKeywordStartMarker, notKeywordTokenStartMarker)
+	notKeywordTokens := extractKeywords(content, notKeywordTokenStartMarker, tidbKeywordStartMarker)
+	tidbKeywords := extractKeywords(content, tidbKeywordStartMarker, identTokenEndMarker)
 
-func (s *testConsistentSuite) TestKeywordConsistent(c *C) {
-	for k, v := range aliases {
-		c.Assert(k, Not(Equals), v)
-		c.Assert(tokenMap[k], Equals, tokenMap[v])
+	keywordCount := len(reservedKeywords) + len(unreservedKeywords) + len(notKeywordTokens) + len(tidbKeywords)
+	if diff := cmp.Diff(len(tokenMap)-len(aliases), keywordCount-len(windowFuncTokenMap)); diff != "" {
+		t.Errorf("length tokenMap does not match keyword count: %s", diff)
 	}
-	keywordCount := len(s.reservedKeywords) + len(s.unreservedKeywords) + len(s.notKeywordTokens) + len(s.tidbKeywords)
-	c.Assert(len(tokenMap)-len(aliases), Equals, keywordCount-len(windowFuncTokenMap))
 
-	unreservedCollectionDef := extractKeywordsFromCollectionDef(s.content, "\nUnReservedKeyword:")
-	c.Assert(s.unreservedKeywords, DeepEquals, unreservedCollectionDef)
+	unreservedCollectionDef := extractKeywordsFromCollectionDef(content, "\nUnReservedKeyword:")
+	if diff := cmp.Diff(unreservedKeywords, unreservedCollectionDef); diff != "" {
+		t.Errorf("unreserved keywords: %s", diff)
+	}
 
-	notKeywordTokensCollectionDef := extractKeywordsFromCollectionDef(s.content, "\nNotKeywordToken:")
-	c.Assert(s.notKeywordTokens, DeepEquals, notKeywordTokensCollectionDef)
+	notKeywordTokensCollectionDef := extractKeywordsFromCollectionDef(content, "\nNotKeywordToken:")
+	if diff := cmp.Diff(notKeywordTokens, notKeywordTokensCollectionDef); diff != "" {
+		t.Errorf("not keyword tokens: %s", diff)
+	}
 
-	tidbKeywordsCollectionDef := extractKeywordsFromCollectionDef(s.content, "\nTiDBKeyword:")
-	c.Assert(s.tidbKeywords, DeepEquals, tidbKeywordsCollectionDef)
+	tidbKeywordsCollectionDef := extractKeywordsFromCollectionDef(content, "\nTiDBKeyword:")
+	if diff := cmp.Diff(tidbKeywords, tidbKeywordsCollectionDef); diff != "" {
+		t.Errorf("TiDB keywords: %s", diff)
+	}
 }
 
 func extractMiddle(str, startMarker, endMarker string) string {
