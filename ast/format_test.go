@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	. "github.com/pingcap/check"
-	"github.com/pingcap/parser"
-	"github.com/pingcap/parser/ast"
+	"github.com/kyleconroy/sqlparse"
+	"github.com/kyleconroy/sqlparse/ast"
 )
 
 var _ = Suite(&testAstFormatSuite{})

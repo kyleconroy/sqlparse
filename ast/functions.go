@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"github.com/pingcap/errors"
-	"github.com/pingcap/parser/format"
-	"github.com/pingcap/parser/model"
-	"github.com/pingcap/parser/types"
+	"github.com/kyleconroy/sqlparse/format"
+	"github.com/kyleconroy/sqlparse/model"
+	"github.com/kyleconroy/sqlparse/types"
 )
 
 var (

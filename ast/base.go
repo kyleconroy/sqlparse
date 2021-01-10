@@ -14,7 +14,7 @@
 package ast
 
 import (
-	"github.com/pingcap/parser/types"
+	"github.com/kyleconroy/sqlparse/types"
 )
 
 // node is the struct implements node interface except for Accept method.

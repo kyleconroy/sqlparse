@@ -15,7 +15,7 @@ package parser_test
 
 import (
 	. "github.com/pingcap/check"
-	"github.com/pingcap/parser"
+	"github.com/kyleconroy/sqlparse"
 )
 
 var _ = Suite(&testSQLDigestSuite{})
