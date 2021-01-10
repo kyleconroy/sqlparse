@@ -18,7 +18,7 @@ parser: parser.go hintparser.go
 	@(git diff --no-index --exit-code $< $@ && rm $@) || (mv $@ $< && >&2 echo "formatted $<" && exit 1)
 
 bin/goyacc: goyacc/main.go goyacc/format_yacc.go
-	GO111MODULE=on go build -o bin/goyacc goyacc/main.go goyacc/format_yacc.go
+	cd goyacc && go build -o ../bin/goyacc ./...
 
 fmt: bin/goyacc parser_golden.y hintparser_golden.y
 	@echo "gofmt (simplify)"
