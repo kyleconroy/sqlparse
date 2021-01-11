@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//+build integration
-
 // This file ensures that the set of reserved keywords is the same as that of
 // MySQL. To run:
 //
@@ -24,10 +22,12 @@ package integration
 
 import (
 	dbsql "database/sql"
+	"path/filepath"
 	"testing"
 
 	// needed to connect to MySQL
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/kyleconroy/sqlparse/test_driver"
 
 	parser "github.com/kyleconroy/sqlparse"
 )
@@ -38,5 +38,5 @@ func TestCompareReservedWordsWithMySQL(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	parser.CheckCompareReservedWordsWithMySQL(t, db)
+	parser.CheckCompareReservedWordsWithMySQL(t, db, filepath.Join("..", ".."))
 }

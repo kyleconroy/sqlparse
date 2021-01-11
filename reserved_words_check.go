@@ -16,22 +16,25 @@ package parser
 import (
 	dbsql "database/sql"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	iextract "github.com/kyleconroy/sqlparse/internal/extract"
 )
 
 // Add a comment about how this
-func CheckCompareReservedWordsWithMySQL(t *testing.T, db *dbsql.DB) {
-	data, err := ioutil.ReadFile("parser.y")
+func CheckCompareReservedWordsWithMySQL(t *testing.T, db *dbsql.DB, dir string) {
+	data, err := ioutil.ReadFile(filepath.Join(dir, "parser.y"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	content := string(data)
-	reservedKeywords := extractKeywords(content, "ReservedKeyword")
-	unreservedKeywords := extractKeywords(content, "UnReservedKeyword")
-	notKeywordTokens := extractKeywords(content, "NotKeywordToken")
-	tidbKeywords := extractKeywords(content, "TiDBKeyword")
+	reservedKeywords := iextract.KeywordsFromTokens(content, iextract.KeywordReserved)
+	unreservedKeywords := iextract.KeywordsFromTokens(content, iextract.KeywordUnreserved)
+	notKeywordTokens := iextract.KeywordsFromTokens(content, iextract.KeywordNot)
+	tidbKeywords := iextract.KeywordsFromTokens(content, iextract.KeywordTiDB)
 
 	p := New()
 	for _, kw := range reservedKeywords {
