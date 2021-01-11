@@ -1,9 +1,6 @@
 # Parser - A MySQL Compatible SQL Parser
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/pingcap/parser)](https://goreportcard.com/report/github.com/pingcap/parser)
-[![CircleCI Status](https://circleci.com/gh/pingcap/parser.svg?style=shield)](https://circleci.com/gh/pingcap/parser)
-[![GoDoc](https://godoc.org/github.com/pingcap/parser?status.svg)](https://godoc.org/github.com/pingcap/parser)
-[![codecov](https://codecov.io/gh/pingcap/parser/branch/master/graph/badge.svg)](https://codecov.io/gh/pingcap/parser)
+[![Go Reference](https://pkg.go.dev/badge/github.com/kyleconroy/sqlparse.svg)](https://pkg.go.dev/github.com/kyleconroy/sqlparse)
 
 The goal of this project is to build a Golang parser that is fully compatible with MySQL syntax, easy to extend, and high performance. Currently, features supported by parser are as follows:
 
